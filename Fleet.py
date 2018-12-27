@@ -2,10 +2,10 @@
 train_is_new_func = {
     'Red': lambda x: int(x) >= 1900,
     'Orange': lambda x: int(x) >= 1400,
-    'Green-B': lambda x: int(x) >= 3900,
-    'Green-C': lambda x: int(x) >= 3900,
-    'Green-D': lambda x: int(x) >= 3900,
-    'Green-E': lambda x: int(x) >= 3900
+    'Green-B': lambda x: int(x) >= 3900 and int(x) <= 3924,
+    'Green-C': lambda x: int(x) >= 3900 and int(x) <= 3924,
+    'Green-D': lambda x: int(x) >= 3900 and int(x) <= 3924,
+    'Green-E': lambda x: int(x) >= 3900 and int(x) <= 3924
 }
 
 train_is_new_func_test = {
