@@ -8,6 +8,7 @@ redis = "*"
 requests = "*"
 Flask = "*"
 gunicorn = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 pylint = "*"
