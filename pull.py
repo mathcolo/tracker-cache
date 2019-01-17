@@ -10,10 +10,10 @@ import secrets
 redis_conn = redis.StrictRedis(host='localhost', port=6379, db=0)
 routes = ['Red', 'Orange', 'Green-B', 'Green-C', 'Green-D', 'Green-E']
 
-if secrets.POSTGRES_HOST and secrets.POSTGRES_PASS:
-    postgres_conn = psycopg2.connect(host=secrets.POSTGRES_HOST, dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER, password=secrets.POSTGRES_PASS)
-else:
+if secrets.POSTGRES_IDENT:
     postgres_conn = psycopg2.connect(dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER)
+else:
+    postgres_conn = psycopg2.connect(host=secrets.POSTGRES_HOST, dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER, password=secrets.POSTGRES_PASS)
 
 DB_LOG_TABLE_NAME = 'newtrains_history'
 json = API.getV3('vehicles', 'route', ','.join(routes), suffix='&include=stop')
@@ -72,7 +72,7 @@ with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
 log = {}
 for route in routes:
     with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-        cursor.execute("SELECT car, to_char(seen_end, 'YYYY-MM-DD HH:MM:SS') from newtrains_history WHERE route = %s ORDER BY seen_start DESC LIMIT 4", [route])
+        cursor.execute("SELECT car, to_char(seen_end, 'YYYY-MM-DD HH24:MI:SS') from newtrains_history WHERE route = %s ORDER BY seen_start DESC LIMIT 4", [route])
         latest = [{'car': x[0], 'seen_end': x[1]} for x in cursor.fetchall()]
         log[route] = latest
 redis_conn.set("log", JSON.dumps(log))
