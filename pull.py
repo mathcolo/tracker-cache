@@ -10,7 +10,7 @@ import secrets
 redis_conn = redis.StrictRedis(host='localhost', port=6379, db=0)
 routes = ['Red', 'Orange', 'Green-B', 'Green-C', 'Green-D', 'Green-E']
 
-postgres_conn = psycopg2.connect(host=secrets.POSTGRES_HOST, dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER, password=POSTGRES_PASS)
+postgres_conn = psycopg2.connect(host=secrets.POSTGRES_HOST, dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER, password=secrets.POSTGRES_PASS)
 DB_LOG_TABLE_NAME = 'newtrains_history'
 json = API.getV3('vehicles', 'route', ','.join(routes), suffix='&include=stop')
 
