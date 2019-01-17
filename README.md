@@ -8,7 +8,7 @@ tracker-cache is the backend for [https://newtrains.today](https://newtrains.tod
 
 ## Development instructions
 1. In the project root, create a file named `secrets.py` and populate it with your MBTA v3 API key: `API_KEY = <KEY>`
-2. Install and run [Redis](https://redis.io/) locally
+2. Install and run both [Redis](https://redis.io/) and [PostgreSQL](https://www.postgresql.org/download/) locally
 3. In the root directory, run `pipenv install` to install Python dependencies
 4. Run `python pull.py` to populate your Redis cache a single time (in production this is run every minute via cron)
 5. Run `python server.py` to begin serving the API locally

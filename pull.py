@@ -2,15 +2,16 @@ import redis
 import API
 import datetime
 import json as JSON
-# import psycopg2
-# import psycopg2.extras
-from Fleet import car_array_is_new
+import psycopg2
+import psycopg2.extras
+from Fleet import car_is_new, car_array_is_new
+from secrets import POSTGRES_PASS
 
 redis_conn = redis.StrictRedis(host='localhost', port=6379, db=0)
 routes = ['Red', 'Orange', 'Green-B', 'Green-C', 'Green-D', 'Green-E']
 
-# postgres_conn = psycopg2.connect(host='localhost', dbname="postgres", user="postgres", password="postgres")
-# DB_LOG_TABLE_NAME = 'newtrains_history'
+postgres_conn = psycopg2.connect(host='localhost', dbname="postgres", user="postgres", password=POSTGRES_PASS)
+DB_LOG_TABLE_NAME = 'newtrains_history'
 json = API.getV3('vehicles', 'route', ','.join(routes), suffix='&include=stop')
 
 # Create a data structure that maps station ids to station names, which are included in the API payload
@@ -48,16 +49,26 @@ for route_name in routes:
     redis_conn.expireat(route_name, datetime.datetime.combine(datetime.datetime.today() + datetime.timedelta(1), datetime.time.min))
 
 # Add to PostgreSQL log
-# with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-#     # This is a little nasty, but we want to maintain independent db rows for each car in a series (for the green line)
-#     for route in routes:
-#         for vehicle in vehicles_by_route[route]:
-#             for car in vehicle['cars']:
-#                 cursor.execute("select * from newtrains_history WHERE car = %s ORDER BY seen_start DESC LIMIT 1", [car])
-#                 latest = cursor.fetchone()
-#                 if latest and (datetime.datetime.now() - latest['seen_end']).seconds < 1200: # Update the current record
-#                     cursor.execute("UPDATE newtrains_history SET seen_end = %s WHERE id = %s", [datetime.datetime.now(), latest['id']])
-#                 else:
-#                     # Make a new record
-#                     cursor.execute("insert into newtrains_history (route, car, seen_start, seen_end) values (%s, %s, %s)", [route, car, datetime.datetime.now()])
-#     postgres_conn.commit()
+with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+    # This is a little nasty, but we want to maintain independent db rows for each car in a series (for the green line)
+    for route in routes:
+        for vehicle in vehicles_by_route[route]:
+            for car in vehicle['cars']:
+                if car_is_new(route, car):
+                    cursor.execute("SELECT * from newtrains_history WHERE car = %s ORDER BY seen_start DESC LIMIT 1", [car])
+                    latest = cursor.fetchone()
+                    if latest and (datetime.datetime.now() - latest['seen_end']).seconds < 1200: # Update the current record
+                        cursor.execute("UPDATE newtrains_history SET seen_end = %s WHERE id = %s", [datetime.datetime.now(), latest['id']])
+                    else:
+                        # Make a new record
+                        cursor.execute("INSERT INTO newtrains_history (route, car, seen_start, seen_end) values (%s, %s, %s, %s)", [route, car, datetime.datetime.now(), datetime.datetime.now()])
+    postgres_conn.commit()
+
+# Populate redis with the 3 most recently seen new trains per route
+log = {}
+for route in routes:
+    with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+        cursor.execute("SELECT car, to_char(seen_end, 'YYYY-MM-DD HH:MM:SS') from newtrains_history WHERE route = %s ORDER BY seen_start DESC LIMIT 4", [route])
+        latest = [{'car': x[0], 'seen_end': x[1]} for x in cursor.fetchall()]
+        log[route] = latest
+redis_conn.set("log", JSON.dumps(log))

@@ -22,5 +22,10 @@ def status():
     response = flask.Response(json.dumps(data))
     return response
 
+@app.route("/puller/log")
+def log():
+    response = flask.Response(redis_conn.get('log'))
+    return response
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

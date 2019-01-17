@@ -17,5 +17,8 @@ train_is_new_func_test = {
     'Green-E': lambda x: int(x) >= 3894
 }
 
+def car_is_new(route_name, car):
+    return train_is_new_func[route_name](car)
+
 def car_array_is_new(route_name, arr):
     return any(map(train_is_new_func[route_name], arr))
