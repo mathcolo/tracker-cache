@@ -19,12 +19,16 @@ def status():
     data.pop('Green-D', None)
     data.pop('Green-E', None)
 
-    response = flask.Response(json.dumps(data))
-    return response
 
-@app.route("/puller/log")
-def log():
-    response = flask.Response(redis_conn.get('log'))
+    # Past data
+    data_log = json.loads(redis_conn.get('log'))
+
+    response_json = {
+        'current': data,
+        'past': data_log
+    }
+
+    response = flask.Response(json.dumps(response_json))
     return response
 
 if __name__ == "__main__":

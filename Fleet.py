@@ -1,7 +1,7 @@
 # Define what a new train is
 train_is_new_func = {
-    'Red': lambda x: int(x) >= 1900,
-    'Orange': lambda x: int(x) >= 1400,
+    'Red': lambda x: int(x) >= 1900 and int(x) <= 2151,
+    'Orange': lambda x: int(x) >= 1400 and int(x) <= 1551,
     'Green-B': lambda x: int(x) >= 3900 and int(x) <= 3924,
     'Green-C': lambda x: int(x) >= 3900 and int(x) <= 3924,
     'Green-D': lambda x: int(x) >= 3900 and int(x) <= 3924,

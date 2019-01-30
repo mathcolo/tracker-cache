@@ -9,6 +9,7 @@ import secrets
 
 redis_conn = redis.StrictRedis(host='localhost', port=6379, db=0)
 routes = ['Red', 'Orange', 'Green-B', 'Green-C', 'Green-D', 'Green-E']
+routes_with_green_coalesced = [['Red'], ['Orange'], ['Green-B', 'Green-C', 'Green-D', 'Green-E']]
 
 if secrets.POSTGRES_IDENT:
     postgres_conn = psycopg2.connect(dbname=secrets.POSTGRES_DB, user=secrets.POSTGRES_USER)
@@ -70,9 +71,9 @@ with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
 
 # Populate redis with the 3 most recently seen new trains per route
 log = {}
-for route in routes:
+for route in routes_with_green_coalesced:
     with postgres_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-        cursor.execute("SELECT car, to_char(seen_end, 'YYYY-MM-DD HH24:MI:SS') from newtrains_history WHERE route = %s ORDER BY seen_start DESC LIMIT 4", [route])
+        cursor.execute("SELECT car, to_char(seen_end, 'YYYY-MM-DD HH24:MI:SS') from newtrains_history WHERE route IN %s ORDER BY seen_start DESC LIMIT 4", [tuple(route)])
         latest = [{'car': x[0], 'seen_end': x[1]} for x in cursor.fetchall()]
-        log[route] = latest
+        log[route[0].split('-')[0]] = latest
 redis_conn.set("log", JSON.dumps(log))
