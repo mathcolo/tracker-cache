@@ -31,20 +31,5 @@ def status2():
     response = flask.Response(json.dumps(response_json))
     return response
 
-@app.route("/puller/status")
-def status():
-    returns = [json.loads(x) for x in redis_conn.mget(*routes)]
-    data = {routes[i]: returns[i] for i in range(0, len(routes))}
-
-    # Fix the green line
-    data['Green'] = data['Green-B'] + data['Green-C'] + data['Green-D'] + data['Green-E']
-    data.pop('Green-B', None)
-    data.pop('Green-C', None)
-    data.pop('Green-D', None)
-    data.pop('Green-E', None)
-
-    response = flask.Response(json.dumps(data))
-    return response
-
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
