@@ -30,23 +30,22 @@ for vehicle in json['data']:
     if vehicle['relationships']['trip']['data']['id'] not in seen_trip_ids:
         # Dedup trip ids
         seen_trip_ids.append(vehicle['relationships']['trip']['data']['id'])
-        # try:
-        vehicle_output = {
-            'trip_id': vehicle['relationships']['trip']['data']['id'],
-            'cars': vehicle['attributes']['label'].split('-'),
-            'cars_new_flag': car_array_is_new(route_name, vehicle['attributes']['label'].split('-')),
-            'status': vehicle['attributes']['current_status'],
-            'direction': vehicle['attributes']['direction_id']
-        }
-        # Sometimes the stop data isn't present, so we (optionally) add it in
-        if vehicle['relationships']['stop']['data']:
-            vehicle_output['stop_id'] = vehicle['relationships']['stop']['data']['id']
-            vehicle_output['stop_name'] = stop_ids_to_names[vehicle['relationships']['stop']['data']['id']]
+        try:
+            vehicle_output = {
+                'trip_id': vehicle['relationships']['trip']['data']['id'],
+                'cars': vehicle['attributes']['label'].split('-'),
+                'cars_new_flag': car_array_is_new(route_name, vehicle['attributes']['label'].split('-')),
+                'status': vehicle['attributes']['current_status'],
+                'direction': vehicle['attributes']['direction_id']
+            }
+            # Sometimes the stop data isn't present, so we (optionally) add it in
+            if vehicle['relationships']['stop']['data']:
+                vehicle_output['stop_id'] = vehicle['relationships']['stop']['data']['id']
+                vehicle_output['stop_name'] = stop_ids_to_names[vehicle['relationships']['stop']['data']['id']]
 
-        vehicles_by_route[route_name].append(vehicle_output)
-        # except KeyError:
-        #     breakpoint()
-        #     print('vehicle error: {}'.format(vehicle))
+            vehicles_by_route[route_name].append(vehicle_output)
+        except AttributeError:
+            print('vehicle error: {}'.format(vehicle))
 
 for route_name in routes:
     new_trains_on_route = list(vehicles_by_route[route_name])
