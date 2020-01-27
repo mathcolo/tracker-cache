@@ -26,11 +26,11 @@ stop_ids_to_names = {x['id'] : x['attributes']['name'] for x in json['included']
 vehicles_by_route = {x: [] for x in routes}
 seen_trip_ids = []
 for vehicle in json['data']:
-    route_name = vehicle['relationships']['route']['data']['id']
-    if vehicle['relationships']['trip']['data']['id'] not in seen_trip_ids:
-        # Dedup trip ids
-        seen_trip_ids.append(vehicle['relationships']['trip']['data']['id'])
-        try:
+    try:
+        route_name = vehicle['relationships']['route']['data']['id']
+        if vehicle['relationships']['trip']['data']['id'] not in seen_trip_ids:
+            # Dedup trip ids
+            seen_trip_ids.append(vehicle['relationships']['trip']['data']['id'])
             vehicle_output = {
                 'trip_id': vehicle['relationships']['trip']['data']['id'],
                 'cars': vehicle['attributes']['label'].split('-'),
@@ -44,8 +44,8 @@ for vehicle in json['data']:
                 vehicle_output['stop_name'] = stop_ids_to_names[vehicle['relationships']['stop']['data']['id']]
 
             vehicles_by_route[route_name].append(vehicle_output)
-        except AttributeError:
-            print('vehicle error: {}'.format(vehicle))
+    except AttributeError:
+        print('vehicle error: {}'.format(vehicle))
 
 for route_name in routes:
     new_trains_on_route = list(vehicles_by_route[route_name])
